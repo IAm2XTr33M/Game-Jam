@@ -68,17 +68,17 @@ public class PlayerController : MonoBehaviour
 
     private void Start()
     {
-        if (instance == null)
-        {
-            instance = this;
-        }
-
         controller = GetComponent<CharacterController>();
         anim = GetComponentInChildren<Animator>();
         lastPosition = transform.position;
     }
     private void Awake()
     {
+        if (instance == null)
+        {
+            instance = this;
+        }
+
         overlay.gameObject.SetActive(true);
 
         StartCoroutine(FadeIn());
@@ -126,7 +126,7 @@ public class PlayerController : MonoBehaviour
         Vector3 right = cameraHolder.transform.TransformDirection(Vector3.right);
 
 
-        if (Input.GetMouseButton(1))
+        if (Input.GetMouseButton(1) || Input.GetMouseButton(0))
         {
             Vector2 mouseInput = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
 
@@ -192,7 +192,9 @@ public class PlayerController : MonoBehaviour
             staminaBar.GetComponent<RectTransform>().sizeDelta = new Vector2(1000 * currentStamina / 100, 40);
         }
 
-
+        float playerHeight = controller.bounds.extents.y;
+        float raycastDistance = playerHeight + 0.2f;
+        bool isGrounded = Physics.Raycast(transform.position, Vector3.down, raycastDistance);
 
         if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0)
         {
@@ -206,7 +208,7 @@ public class PlayerController : MonoBehaviour
         float movementDirectionY = moveDir.y;
         moveDir = (forward * curSpeedX) + (right * curSpeedY);
 
-        if (Input.GetButton("Jump") && canMove && controller.isGrounded)
+        if (Input.GetButtonDown("Jump") && canMove && isGrounded)
         {
             moveDir.y = jumpForce;
             anim.SetBool("Jump", true);
@@ -215,7 +217,7 @@ public class PlayerController : MonoBehaviour
         {
             moveDir.y = movementDirectionY;
         }
-        if (!controller.isGrounded)
+        if (!isGrounded)
         {
             moveDir.y -= gravity * Time.deltaTime;
             anim.SetBool("Jump", true);
@@ -372,6 +374,38 @@ public class PlayerController : MonoBehaviour
             case 3: return new Vector2(-708f, -415);
             case 4: return new Vector2(-708f, -373);
             default: return new Vector2(-708f, -505);
+        }
+    }
+
+    public void WriteText(string text)
+    {
+        TextMeshProUGUI bar = textBar.GetComponent<TextMeshProUGUI>();
+        bar.fontSize = 40;
+        bar.text = text;
+
+        StopCoroutine(ShrinkText());
+
+        StartCoroutine(ShrinkText());
+
+        IEnumerator ShrinkText()
+        {
+            for (int i = 0; i < 52; i++)
+            {
+                bar.fontSize = i;
+                yield return new WaitForSeconds(1 / 52);
+            }
+
+            yield return new WaitForSeconds(3);
+            for (int i = 0; i < 52; i++)
+            {
+                if(bar.text == text)
+                {
+                    bar.fontSize = 52 - i;
+                    yield return new WaitForSeconds(1 / 52);
+                }
+            }
+
+            bar.text = "";
         }
     }
 
