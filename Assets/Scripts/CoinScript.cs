@@ -10,9 +10,15 @@ public class CoinScript : MonoBehaviour
     private void Start()
     {
         GetComponentInChildren<ParticleSystem>().Stop();
+        GetComponentInChildren<MeshRenderer>().enabled = false;
     }
     void Update()
     {
+        if(PlayerController.instance.gameObject.transform.position.z > transform.position.z - 15f)
+        {
+            GetComponentInChildren<MeshRenderer>().enabled = true;
+        }
+
         transform.eulerAngles += new Vector3(0, Time.deltaTime * 180 * speed, 0);
         if (touched)
         {

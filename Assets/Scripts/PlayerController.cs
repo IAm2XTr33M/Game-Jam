@@ -58,6 +58,9 @@ public class PlayerController : MonoBehaviour
 
     private Vector3 lastPosition;
 
+    bool lastGroundCheck = true;
+    Vector3 startJumpPos;
+
     private void OnEnable()
     {
         if (instance == null)
@@ -94,6 +97,11 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            SceneManager.LoadScene(0);
+        }
+
         coinsText.text = coins.ToString();
         health = Mathf.Clamp(health, -1, 101);
 
@@ -140,10 +148,6 @@ public class PlayerController : MonoBehaviour
         {
             cameraHolder.transform.eulerAngles = new Vector3(cameraHolder.transform.eulerAngles.x, Mathf.Round(cameraHolder.transform.eulerAngles.y), cameraHolder.transform.eulerAngles.z);
         }
-
-
-        
-
 
 
         bool isRunning = staminaEmpty ? false : Input.GetKey(KeyCode.LeftControl);
@@ -196,6 +200,12 @@ public class PlayerController : MonoBehaviour
         float raycastDistance = playerHeight + 0.2f;
         bool isGrounded = Physics.Raycast(transform.position, Vector3.down, raycastDistance);
 
+
+        if(isGrounded && !lastGroundCheck && startJumpPos.y >= transform.position.y-0.1f)
+        {
+            GetComponentInChildren<ParticleSystem>().Play();
+        }
+
         if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0)
         {
             anim.SetBool("Running", true);
@@ -210,6 +220,7 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetButtonDown("Jump") && canMove && isGrounded)
         {
+            startJumpPos = transform.position;
             moveDir.y = jumpForce;
             anim.SetBool("Jump", true);
         }
@@ -235,6 +246,7 @@ public class PlayerController : MonoBehaviour
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotateSpeed * Time.deltaTime);
         }
         lastPosition = transform.position;
+        lastGroundCheck = isGrounded;
 
 
         controller.Move(moveDir * Time.deltaTime);
